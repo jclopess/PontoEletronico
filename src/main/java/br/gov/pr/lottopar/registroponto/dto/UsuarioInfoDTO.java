@@ -7,6 +7,6 @@ import lombok.Data;
 public class UsuarioInfoDTO {
     private Long id;
     private String name;
-    private String login;
-    private Perfil perfil;
+    private String username;
+    private Perfil role;
 }
