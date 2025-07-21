@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espelho de Ponto - Sistema de Ponto</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="home">
+
+    <header class="header">
+        <h1>Meu Espelho de Ponto</h1>
+        <a href="home.html" style="color:white; text-decoration: none;">&larr; Voltar para a Página Inicial</a>
+    </header>
+
+    <main class="main-container">
+        <div class="filter-container">
+            <label for="month-select">Mês:</label>
+            <select id="month-select"></select>
+            <label for="year-select">Ano:</label>
+            <select id="year-select"></select>
+            <button id="generate-report-btn">Gerar Relatório</button>
+        </div>
+
+        <div id="report-container">
+            </div>
+    </main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const monthSelect = document.getElementById('month-select');
+        const yearSelect = document.getElementById('year-select');
+        const generateReportBtn = document.getElementById('generate-report-btn');
+        const reportContainer = document.getElementById('report-container');
+
+        let currentUser = null;
+
+        // Popula os seletores de Mês e Ano
+        const setupFilters = () => {
+            const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+            months.forEach((month, index) => {
+                const option = new Option(month, index + 1);
+                monthSelect.add(option);
+            });
+
+            const currentYear = new Date().getFullYear();
+            for (let i = currentYear; i >= currentYear - 5; i--) {
+                const option = new Option(i, i);
+                yearSelect.add(option);
+            }
+
+            // Define o mês e ano atuais como padrão
+            monthSelect.value = new Date().getMonth() + 1;
+            yearSelect.value = currentYear;
+        };
+
+        // Função principal para buscar e renderizar o relatório
+        const fetchAndDisplayReport = async () => {
+            reportContainer.innerHTML = '<p>Gerando relatório...</p>';
+            
+            // Verifica se um ID de usuário foi passado na URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const userIdFromUrl = urlParams.get('userId');
+            
+            let targetUserId = null;
+
+            if (userIdFromUrl) {
+                // Se o gestor está vendo o relatório de um subordinado, use o ID da URL
+                targetUserId = userIdFromUrl;
+            } else {
+                // Senão, é o próprio funcionário vendo seu relatório
+                if (!currentUser) {
+                    try {
+                        const response = await fetch('/api/usuarios/me');
+                        if (!response.ok) throw new Error('Usuário não autenticado.');
+                        currentUser = await response.json();
+                    } catch (error) {
+                        reportContainer.innerHTML = `<p style="color:red;">Erro de autenticação. Por favor, faça o login novamente.</p>`;
+                        return;
+                    }
+                }
+                targetUserId = currentUser.id;
+            }
+            
+            // O resto da função continua igual, mas usando targetUserId
+            const month = monthSelect.value;
+            const year = yearSelect.value;
+            const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+            const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+
+            try {
+                const url = `/api/relatorios/espelho-ponto/${targetUserId}?dataInicio=${startDate}&dataFim=${endDate}`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Falha ao buscar os dados do relatório.');
+
+                const data = await response.json();
+                renderReport(data);
+
+            } catch (error) {
+                reportContainer.innerHTML = `<p style="color:red;">${error.message}</p>`;
+            }
+        };
+
+        // Função que constrói o HTML do relatório a partir dos dados (DTO)
+        const renderReport = (data) => {
+            if (!data || !data.registrosDiarios) {
+                reportContainer.innerHTML = '<p>Nenhum registro encontrado para este período.</p>';
+                return;
+            }
+
+            let html = `
+                <div class="report-header">
+                    <p><strong>Funcionário:</strong> ${data.nomeFuncionario || ''}</p>
+                    <p><strong>Departamento:</strong> ${data.departamento || ''}</p>
+                    <p><strong>Mês de Referência:</strong> ${data.mesReferencia || ''}</p>
+                </div>
+            `;
+
+            data.registrosDiarios.forEach(dia => {
+                html += `
+                    <div class="report-day">
+                        <div class="report-day-header">${dia.dia || ''}</div>
+                        <p><strong>Marcações:</strong> <span class="report-day-marks">${dia.marcacoes ? dia.marcacoes.join(' | ') : 'Nenhuma'}</span></p>
+                        <p><strong>Total Trabalhado:</strong> ${dia.totalHorasTrabalhadasDia || 'N/A'}</p>
+                        <p><strong>Justificativa:</strong> ${dia.justificativa || 'Nenhuma'}</p>
+                    </div>
+                `;
+            });
+            
+            if(data.totalizacao) {
+                html += `
+                    <div class="report-totals">
+                        <p><strong>Total Geral de Horas:</strong> ${data.totalizacao.totalGeralHoras || 'N/A'}</p>
+                        <p style="color:orange;"><strong>${data.totalizacao.pendenciaJustificativa || ''}</strong></p>
+                    </div>
+                `;
+            }
+
+            reportContainer.innerHTML = html;
+        };
+        
+        // Inicialização
+        setupFilters();
+        fetchAndDisplayReport();
+        generateReportBtn.addEventListener('click', fetchAndDisplayReport);
+    });
+</script>
+</body>
+</html>
