@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 public class UsuarioInfoDTO {
     private Long id;
-    private String nomeCompleto;
+    private String name;
     private String login;
     private Perfil perfil;
 }

@@ -31,6 +31,6 @@ public class JustificativaService {
         Usuario usuario = usuarioRepository.findByCpf(cpf)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         
-        return justificativaRepository.findByUserIdOrderByCreatedAtDesc(usuario.getId());
+        return justificativaRepository.findByStatus(usuario.getCpf());
     }
 }

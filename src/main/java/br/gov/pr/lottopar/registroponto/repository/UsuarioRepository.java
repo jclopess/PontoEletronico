@@ -6,8 +6,8 @@ import java.util.Optional;
 import java.util.List;
 
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
-    // O Spring Security usará este método para buscar um usuário pelo login
-    Optional<Usuario> findByLogin(String login);
+    // O Spring Security usará este método para buscar um usuário pelo CPF
+    Optional<Usuario> findByCpf(String cpf);
 
     List<Usuario> findByGestorId(Long gestorId);
 }

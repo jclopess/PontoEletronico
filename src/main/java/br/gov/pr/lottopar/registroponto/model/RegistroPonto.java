@@ -34,4 +34,10 @@ public class RegistroPonto {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    public RegistroPonto(Usuario usuario, LocalDate date) {
+        this.usuario = usuario;
+        this.date = date;
+    }
 }
+

@@ -13,7 +13,7 @@ import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
+import java.math.RoundingMode;
 
 @Service
 public class PontoService {
@@ -71,20 +71,22 @@ public class PontoService {
             long minutosTarde = ChronoUnit.MINUTES.between(registro.getEntry2(), registro.getExit2());
 
             double totalHoras = (minutosManha + minutosTarde) / 60.0;
-            registro.setTotalHours(BigDecimal.valueOf(totalHoras).setScale(2, BigDecimal.ROUND_HALF_UP));
+            registro.setTotalHours(BigDecimal.valueOf(totalHoras).setScale(2, RoundingMode.HALF_UP));
         }
     }
     
     // Métodos para justificativas foram movidos para JustificativaService
-    
+
     public List<RegistroPonto> listarMeusRegistros(String cpf, int ano, int mes) {
         Usuario usuario = usuarioRepository.findByCpf(cpf)
-            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
+        // CORRIGIDO: Lógica agora usa LocalDate para construir o período
         YearMonth yearMonth = YearMonth.of(ano, mes);
         LocalDate inicio = yearMonth.atDay(1);
         LocalDate fim = yearMonth.atEndOfMonth();
 
+        // CORRIGIDO: Chamando o novo método do repositório
         return registroPontoRepository.findByUsuarioIdAndDateBetweenOrderByDateAsc(usuario.getId(), inicio, fim);
     }
 }
