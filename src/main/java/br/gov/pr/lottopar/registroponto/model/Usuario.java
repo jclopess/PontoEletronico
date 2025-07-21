@@ -1,44 +1,68 @@
 package br.gov.pr.lottopar.registroponto.model;
 
-import java.time.LocalDate;
-import java.util.List;
 import jakarta.persistence.*;
 import lombok.Data;
-
+import java.time.LocalDate;
+import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
+@Table(name = "users") // Usando "users" para manter consistência com o schema anterior
 @Data
 public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nomeCompleto; // Ex: "JACKSON LOPES ROCHA DA SILVA" [cite: 44]
-    @Column(unique = true)
-    private String login; // Campo usado para login na página web [cite: 28]
-    private String senha; // Será armazenada de forma criptografada [cite: 28, 62]
-    private Long codigo; // Ex: "Código: 24" [cite: 56]
-    private LocalDate dataCadastro; // Ex: "27/02/2023" [cite: 56]
+    @Column(unique = true, nullable = false)
+    private String cpf; // Campo principal para login, deve ser único
+
+    @Column(unique = true, nullable = false)
+    private String username; // Pode ser o mesmo que o CPF ou um nome de usuário
+
+    @Column(nullable = false)
+    private String password;
+
+    @Column(nullable = false)
+    private String name; // Nome completo
+
+    private String phone;
+
     @Enumerated(EnumType.STRING)
-    private Perfil perfil; // Define se é FUNCIONARIO, GESTOR ou ADMIN
-    private boolean senhaTemporariaAtiva; // Controla a obrigatoriedade de trocar a senha [cite: 32]
+    @Column(nullable = false)
+    private Perfil role; // 'EMPLOYEE', 'MANAGER', 'ADMIN'
 
     @ManyToOne
-    @JoinColumn(name = "departamento_id")
-    private Departamento departamento;
+    @JoinColumn(name = "department_id")
+    private Departamento department;
 
     @ManyToOne
-    @JoinColumn(name = "funcao_id")
-    private Funcao funcao;
+    @JoinColumn(name = "function_id")
+    private Funcao function;
 
     @ManyToOne
-    @JoinColumn(name = "carga_horaria_id")
-    private CargaHoraria cargaHoraria;
+    @JoinColumn(name = "employment_type_id")
+    private TipoVinculo employmentType; // Renomeado de CargaHoraria
 
-    @ManyToOne
-    @JoinColumn(name = "gestor_id")
-    private Usuario gestor; // Representa a chefia imediata [cite: 55]
+    private LocalDate admissionDate;
+    private LocalDate dismissalDate;
 
+    @Column(nullable = false)
+    private String status; // "active", "blocked", "inactive"
+
+    @Column(precision = 4, scale = 2, nullable = false)
+    private BigDecimal dailyWorkHours;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDate createdAt = LocalDate.now();
+
+    // Relações
     @OneToMany(mappedBy = "usuario")
     private List<RegistroPonto> registrosPonto;
+
+    @OneToMany(mappedBy = "user")
+    private List<Justificativa> justificativas;
+
+    @OneToMany(mappedBy = "user")
+    private List<BancoHoras> bancoHoras;
 }

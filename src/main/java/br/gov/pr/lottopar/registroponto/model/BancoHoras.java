@@ -2,33 +2,32 @@ package br.gov.pr.lottopar.registroponto.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.LocalDateTime;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "time_records")
+@Table(name = "hour_bank")
 @Data
-public class RegistroPonto {
+public class BancoHoras {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private Usuario usuario;
+    private Usuario user;
 
     @Column(nullable = false)
-    private LocalDate date; // Apenas a data do registro
+    private String month; // Formato "YYYY-MM"
 
-    private LocalTime entry1;
-    private LocalTime exit1;
-    private LocalTime entry2;
-    private LocalTime exit2;
+    @Column(precision = 6, scale = 2, nullable = false)
+    private BigDecimal expectedHours;
 
-    @Column(precision = 4, scale = 2)
-    private BigDecimal totalHours;
+    @Column(precision = 6, scale = 2, nullable = false)
+    private BigDecimal workedHours;
+
+    @Column(precision = 6, scale = 2, nullable = false)
+    private BigDecimal balance;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
