@@ -2,12 +2,14 @@ package br.gov.pr.lottopar.registroponto.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -17,36 +19,35 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Desabilita a proteção CSRF. É uma prática comum para APIs
-            //    e simplifica nosso formulário de login que não tem o token CSRF.
-            .csrf(csrf -> csrf.disable())
-
-            // 2. Define as regras de autorização para os requests HTTP
+            .csrf(csrf -> csrf.disable()) // Desabilita CSRF, comum para APIs stateless
             .authorizeHttpRequests(authorize -> authorize
-                // Permite acesso a recursos estáticos e à página de esqueci-senha sem autenticação.
-                // Note que REMOVEMOS o "/login" daqui.
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/esqueci-senha").permitAll()
-                // Todas as outras requisições exigem autenticação
+                // Permite acesso público ao endpoint de login
+                .requestMatchers("/api/login").permitAll()
+                // Todas as outras requisições precisam de autenticação
                 .anyRequest().authenticated()
             )
-
-            // 3. Configura o formulário de login
             .formLogin(form -> form
-                // O endpoint que processa o POST com as credenciais. Deve ser o mesmo do 'action' do form.
-                .loginProcessingUrl("/login")
-                // A URL para onde o usuário é redirecionado após o sucesso
-                .defaultSuccessUrl("/home.html", true)
-                // A URL para onde o usuário é redirecionado em caso de falha
-                .failureUrl("/index.html?error=true")
-                // Permite que todos acessem os endpoints relacionados ao formulário de login.
-                .permitAll()
+                // Define o endpoint que processa a autenticação
+                .loginProcessingUrl("/api/login")
+                // Handler para SUCESSO na autenticação
+                .successHandler((request, response, authentication) -> {
+                    response.setStatus(HttpStatus.OK.value()); // Retorna status 200 OK
+                })
+                // Handler para FALHA na autenticação
+                .failureHandler((request, response, exception) -> {
+                    response.setStatus(HttpStatus.UNAUTHORIZED.value()); // Retorna status 401 Unauthorized
+                })
             )
-
-            // 4. Configura o logout
             .logout(logout -> logout
-                .logoutUrl("/logout") // URL para acionar o logout
-                .logoutSuccessUrl("/index.html?logout=true") // Para onde vai após o logout
-                .permitAll()
+                .logoutUrl("/api/logout")
+                // No sucesso do logout, apenas retorna status 200 OK
+                .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.OK))
+            )
+            // Configura como o sistema deve agir quando um acesso não autenticado é negado
+            .exceptionHandling(e -> e
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpStatus.UNAUTHORIZED.value()); // Retorna 401 para qualquer tentativa de acesso não autenticado a uma rota protegida
+                })
             );
 
         return http.build();

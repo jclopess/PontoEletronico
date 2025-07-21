@@ -1,49 +1,45 @@
-version: '3.8'
-
 services:
   # Serviço do Banco de Dados PostgreSQL
   db:
     image: postgres:15
-    container_name: registroponto_db
+    container_name: ponto_db
     environment:
-      POSTGRES_USER: postgres # Use o mesmo do seu application.properties
-      POSTGRES_PASSWORD: H^062050010201ow # Use a mesma do seu application.properties
+      POSTGRES_USER: ${DB_USER} # <-- MODIFICADO
+      POSTGRES_PASSWORD: ${DB_PASSWORD} # <-- MODIFICADO
       POSTGRES_DB: registroponto_db
     ports:
-      - "5433:5432" # Mapeia a porta interna 5432 para a 5433 na sua máquina
+      - "5433:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
-  # Serviço do Back-end Spring Boot
+  # Serviço do Back-end Spring Boot (Java)
   backend:
-    container_name: registroponto-backend
-    # Constrói a imagem a partir do Dockerfile na pasta atual
-    build: .
+    container_name: ponto-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: on-failure
     ports:
-      - "8081:8081" # Mapeia a porta 8081 do container para a 8081 da sua máquina
+      - "${BACKEND_PORT}:${BACKEND_PORT}" # <-- MODIFICADO
     environment:
-      # Sobrescreve as configurações do application.properties para apontar para o container do DB
-      - spring.datasource.url=jdbc:postgresql://db:5432/registroponto_db
-      - spring.datasource.username=postgres
-      - spring.datasource.password=H^062050010201ow
-      - logging.level.org.springframework.security=DEBUG
+      - spring.datasource.url=${DB_URL} # <-- MODIFICADO
+      - spring.datasource.username=${DB_USER} # <-- MODIFICADO
+      - spring.datasource.password=${DB_PASSWORD} # <-- MODIFICADO
+      - server.port=${BACKEND_PORT} # <-- MODIFICADO
       - server.forward-headers-strategy=NATIVE
     depends_on:
-      - db # Garante que o container do DB inicie antes do back-end
+      - db
 
-  # Serviço do Front-end com Nginx
+  # Serviço do Front-end (React + Nginx)
   frontend:
-    image: nginx:alpine
-    container_name: registroponto-frontend
+    container_name: ponto-frontend
+    build:
+      context: .
+      dockerfile: client/Dockerfile
     ports:
-      - "8080:80" # Mapeia a porta 80 do container para a porta 8080 da sua máquina
-    volumes:
-      # Mapeia a pasta 'frontend' local para a pasta web do Nginx
-      - ./frontend:/usr/share/nginx/html
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - "8080:80"
+    depends_on:
+      - backend
 
 volumes:
   postgres-data:
-
-  

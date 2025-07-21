@@ -19,15 +19,15 @@ public class CustomUserDetailsService implements UserDetailsService {
     private UsuarioRepository usuarioRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String cpf) throws UsernameNotFoundException {
-        // Busca o usuário no banco de dados pelo CPF
-        Usuario usuario = usuarioRepository.findByCpf(cpf)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado com o CPF: " + cpf));
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        // Retorna um objeto UserDetails que o Spring Security usa para autenticação
-        // O perfil (ex: GESTOR) é prefixado com "ROLE_" por convenção do Spring Security
+        String cpfNumerico = username.replaceAll("\\D", "");
+
+        Usuario usuario = usuarioRepository.findByCpf(cpfNumerico)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado com o CPF: " + username));
+
         return new User(
-                usuario.getUsername(),
+                usuario.getCpf(),
                 usuario.getPassword(),
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + usuario.getRole().name()))
         );

@@ -10,6 +10,7 @@ import br.gov.pr.lottopar.registroponto.repository.RegistroPontoRepository;
 import br.gov.pr.lottopar.registroponto.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,7 +37,6 @@ public class RelatorioService {
         Usuario funcionario = usuarioRepository.findById(funcionarioId)
                 .orElseThrow(() -> new RuntimeException("Funcionário não encontrado."));
 
-        // Valida se o solicitante tem permissão para ver o relatório
         validarPermissao(solicitante, funcionario);
 
         // --- 2. BUSCA DE DADOS ---
@@ -47,7 +47,6 @@ public class RelatorioService {
         EspelhoPontoDTO espelhoPonto = new EspelhoPontoDTO();
         preencherCabecalho(espelhoPonto, funcionario, dataInicio);
 
-        // Agrupa os registros por dia e cria os DTOs diários
         Map<LocalDate, List<RegistroPonto>> registrosAgrupadosPorDia = registrosDoPeriodo.stream()
                 .collect(Collectors.groupingBy(RegistroPonto::getDate));
 
@@ -57,10 +56,8 @@ public class RelatorioService {
         });
         espelhoPonto.setRegistrosDiarios(registrosDiarios);
 
-        // Calcula e preenche os totais
         preencherTotalizacao(espelhoPonto, registrosDiarios);
 
-        // Preenche metadados da geração
         espelhoPonto.setRelatorioGeradoPor("Gerado por: " + solicitante.getUsername() + " em " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
 
         return espelhoPonto;
@@ -75,21 +72,23 @@ public class RelatorioService {
                 throw new SecurityException("Acesso negado. Você não é o gestor deste funcionário.");
             }
         }
-        // Se for ADMIN, o acesso é permitido implicitamente.
     }
 
     private void preencherCabecalho(EspelhoPontoDTO espelho, Usuario funcionario, LocalDate dataInicio) {
         espelho.setNomeFuncionario(funcionario.getName());
         espelho.setDepartamento(funcionario.getDepartment() != null ? funcionario.getDepartment().getNome() : "Não informado");
-        espelho.setMesReferencia(dataInicio.getMonth().getDisplayName(TextStyle.FULL, Locale.of("pt", "BR")) + "/" + dataInicio.getYear());
+
+        String mesReferencia = dataInicio.getMonth().getDisplayName(TextStyle.FULL, new Locale("pt", "BR")) + "/" + dataInicio.getYear();
+        espelho.setMesReferencia(mesReferencia);
+        
         espelho.setNomeGestor(funcionario.getGestor() != null ? funcionario.getGestor().getName() : "Não informado");
-        // Adicione aqui outros campos do cabeçalho se necessário
     }
 
     private RegistroDiarioDTO criarRegistroDiarioDTO(LocalDate data, RegistroPonto registro) {
         RegistroDiarioDTO diarioDTO = new RegistroDiarioDTO();
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-        String diaDaSemana = data.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.of("pt", "BR"));
+        
+        String diaDaSemana = data.getDayOfWeek().getDisplayName(TextStyle.FULL, new Locale("pt", "BR"));
         diarioDTO.setDia(data.format(DateTimeFormatter.ofPattern("dd/MM")) + " - " + diaDaSemana);
 
         List<String> marcacoes = new ArrayList<>();
@@ -108,10 +107,6 @@ public class RelatorioService {
             diarioDTO.setTotalHorasTrabalhadasDia("Incompleto");
         }
         
-        // Lógica de justificativa (simplificada, pode ser expandida)
-        // diarioDTO.setJustificativa(...);
-        // diarioDTO.setJustificado(...);
-
         return diarioDTO;
     }
 
