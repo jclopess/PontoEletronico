@@ -71,7 +71,7 @@ export default function AuthPage() {
                 <CardContent className="p-6">
                   <form onSubmit={handleLogin} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="username">Usuário/CPF</Label>
+                      <Label htmlFor="username">CPF</Label>
                       <Input
                         id="username"
                         type="text"

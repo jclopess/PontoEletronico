@@ -20,9 +20,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // A variável 'username' é o que o usuário digita no campo de login.
-        // Vamos tratá-la como o CPF.
         
+        System.out.println("====== [DEBUG] TENTATIVA DE LOGIN PARA O USUÁRIO/CPF: " + username + " ======");       
         // 1. NORMALIZAÇÃO: Remove toda a pontuação do CPF digitado.
         String cpfNumerico = username.replaceAll("\\D", "");
 
@@ -31,7 +30,6 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado com o CPF: " + username));
 
         // 3. RETORNO: O Spring Security usará estas informações para comparar a senha.
-        // O primeiro argumento (username) deve ser um identificador único, usamos o CPF.
         return new User(
                 usuario.getCpf(),
                 usuario.getPassword(),

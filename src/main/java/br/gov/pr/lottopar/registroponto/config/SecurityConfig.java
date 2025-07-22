@@ -19,34 +19,31 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Desabilita CSRF, comum para APIs stateless
+            .csrf(csrf -> csrf.disable()) // Mantém o CSRF desabilitado
             .authorizeHttpRequests(authorize -> authorize
-                // Permite acesso público ao endpoint de login
+                // Permite acesso público a QUALQUER requisição para /api/login
                 .requestMatchers("/api/login").permitAll()
-                // Todas as outras requisições precisam de autenticação
+                // Exige autenticação para todas as outras requisições
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
-                // Define o endpoint que processa a autenticação
+                // O endpoint que o Spring vai "escutar" para as credenciais de login
                 .loginProcessingUrl("/api/login")
-                // Handler para SUCESSO na autenticação
                 .successHandler((request, response, authentication) -> {
-                    response.setStatus(HttpStatus.OK.value()); // Retorna status 200 OK
+                    response.setStatus(HttpStatus.OK.value());
                 })
-                // Handler para FALHA na autenticação
                 .failureHandler((request, response, exception) -> {
-                    response.setStatus(HttpStatus.UNAUTHORIZED.value()); // Retorna status 401 Unauthorized
+                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
                 })
             )
             .logout(logout -> logout
                 .logoutUrl("/api/logout")
-                // No sucesso do logout, apenas retorna status 200 OK
                 .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.OK))
             )
-            // Configura como o sistema deve agir quando um acesso não autenticado é negado
             .exceptionHandling(e -> e
+                // Se um usuário não autenticado tentar acessar algo protegido, retorna 401
                 .authenticationEntryPoint((request, response, authException) -> {
-                    response.setStatus(HttpStatus.UNAUTHORIZED.value()); // Retorna 401 para qualquer tentativa de acesso não autenticado a uma rota protegida
+                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
                 })
             );
 
