@@ -5,6 +5,8 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 @Entity
 @Table(name = "hour_bank")
 @Data
@@ -15,6 +17,7 @@ public class BancoHoras {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference("usuario-bancohoras")
     private Usuario user;
 
     @Column(nullable = false)

@@ -2,14 +2,20 @@ package br.gov.pr.lottopar.registroponto.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor; // Importar a anotação do Lombok
+
 import java.time.LocalDate;
 import java.time.LocalTime;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "time_records")
 @Data
+@NoArgsConstructor // <-- CORREÇÃO: Adiciona o construtor vazio que o JPA precisa
 public class RegistroPonto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,10 +23,11 @@ public class RegistroPonto {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference("usuario-registros")
     private Usuario usuario;
 
     @Column(nullable = false)
-    private LocalDate date; // Apenas a data do registro
+    private LocalDate date;
 
     private LocalTime entry1;
     private LocalTime exit1;
@@ -35,9 +42,9 @@ public class RegistroPonto {
 
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    // Este construtor continua útil para o PontoService
     public RegistroPonto(Usuario usuario, LocalDate date) {
         this.usuario = usuario;
         this.date = date;
     }
 }
-

@@ -10,12 +10,14 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 @Entity
 @Table(name = "users")
-@Getter // Use Getter em vez de @Data
-@Setter // Use Setter em vez de @Data
-@EqualsAndHashCode(exclude = {"registrosPonto", "justificativas", "bancoHoras", "gestor"}) // Exclui campos de relacionamento
-@ToString(exclude = {"registrosPonto", "justificativas", "bancoHoras", "gestor"}) // Exclui campos de relacionamento para evitar loops
+@Getter
+@Setter
+@EqualsAndHashCode(exclude = {"registrosPonto", "justificativas", "bancoHoras", "gestor"})
+@ToString(exclude = {"registrosPonto", "justificativas", "bancoHoras", "gestor"})
 public class Usuario {
 
     @Id
@@ -71,11 +73,14 @@ public class Usuario {
 
     // --- Relacionamentos com outras tabelas ---
     @OneToMany(mappedBy = "usuario")
+    @JsonManagedReference("usuario-registros")
     private List<RegistroPonto> registrosPonto;
 
     @OneToMany(mappedBy = "user")
+    @JsonManagedReference("usuario-justificativas")
     private List<Justificativa> justificativas;
 
     @OneToMany(mappedBy = "user")
+    @JsonManagedReference("usuario-bancohoras")
     private List<BancoHoras> bancoHoras;
 }

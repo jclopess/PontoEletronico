@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 import java.util.List;
 
@@ -19,13 +20,14 @@ public class PontoController {
 
     @PostMapping("/registrar")
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'MANAGER', 'ADMIN')")
-    public ResponseEntity<RegistroPonto> registrarPonto() {
+    public ResponseEntity<?> registrarPonto() { // Alterado para ResponseEntity<?> para permitir diferentes tipos de corpo
         String cpf = SecurityContextHolder.getContext().getAuthentication().getName();
         try {
             RegistroPonto registro = pontoService.registrarPonto(cpf);
             return ResponseEntity.ok(registro);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(null); // Idealmente, retornar um DTO de erro com a mensagem de e.getMessage()
+            // CORREÇÃO: Retorna a mensagem de erro específica do service no corpo da resposta
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
     
@@ -35,4 +37,12 @@ public class PontoController {
         String cpf = SecurityContextHolder.getContext().getAuthentication().getName();
         return pontoService.listarMeusRegistros(cpf, ano, mes);
     }
+    @GetMapping("/hoje")
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'MANAGER', 'ADMIN')")
+    public ResponseEntity<RegistroPonto> getRegistroDeHoje() {
+        String cpf = SecurityContextHolder.getContext().getAuthentication().getName();
+        return pontoService.getRegistroDeHoje(cpf)
+                .map(ResponseEntity::ok) // Se encontrar, retorna 200 OK com o registro
+                .orElse(ResponseEntity.ok(null)); // Se não encontrar, retorna 200 OK com corpo nulo
+}
 }

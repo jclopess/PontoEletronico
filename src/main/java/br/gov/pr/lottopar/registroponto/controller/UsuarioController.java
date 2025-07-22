@@ -28,14 +28,13 @@ public class UsuarioController {
     @GetMapping("/me")
     public ResponseEntity<UsuarioInfoDTO> getUsuarioLogado() {
         String cpf = SecurityContextHolder.getContext().getAuthentication().getName();
-        Usuario usuario = usuarioService.buscarPorCpf(cpf); // Método ajustado para buscar por CPF
+        Usuario usuario = usuarioService.buscarPorCpf(cpf);
 
-        // Mapeia para o DTO com os nomes de campos CORRETOS
         UsuarioInfoDTO dto = new UsuarioInfoDTO();
         dto.setId(usuario.getId());
-        dto.setName(usuario.getName()); // <- Corresponde ao `user.name` no frontend
-        dto.setUsername(usuario.getUsername()); // <- Corresponde ao `user.username`
-        dto.setRole(usuario.getRole()); // <- Corresponde ao `user.role`
+        dto.setName(usuario.getName());
+        dto.setUsername(usuario.getUsername());
+        dto.setRole(usuario.getRole());
 
         return ResponseEntity.ok(dto);
     }

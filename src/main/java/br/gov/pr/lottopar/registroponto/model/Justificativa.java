@@ -5,6 +5,8 @@ import lombok.Data;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 @Entity
 @Table(name = "justifications")
 @Data
@@ -15,6 +17,7 @@ public class Justificativa {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference("usuario-justificativas")
     private Usuario user;
 
     @Column(nullable = false)

@@ -13,6 +13,7 @@ import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.math.RoundingMode;
 
 @Service
@@ -89,4 +90,9 @@ public class PontoService {
         // CORRIGIDO: Chamando o novo método do repositório
         return registroPontoRepository.findByUsuarioIdAndDateBetweenOrderByDateAsc(usuario.getId(), inicio, fim);
     }
+    public Optional<RegistroPonto> getRegistroDeHoje(String cpf) {
+    Usuario usuario = usuarioRepository.findByCpf(cpf)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+    return registroPontoRepository.findByUsuarioIdAndDate(usuario.getId(), LocalDate.now());
+}
 }
